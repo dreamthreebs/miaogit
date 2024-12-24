@@ -1,0 +1,2 @@
+# miaogit
+teach miao git
