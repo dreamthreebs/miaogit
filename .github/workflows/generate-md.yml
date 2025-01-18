@@ -1,17 +1,19 @@
-name: Generate Markdown and Create Branch
+name: Update README with Daily Log
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # 每天 UTC 0:00（北京时间 8:00）运行
+    - cron: '0 16 * * *'  # 每天 UTC 16:00（北京时间 00:00）运行
   workflow_dispatch:  # 允许手动触发
 
 jobs:
-  generate-md:
+  update-readme:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: mogu  # 确保操作的是 "mogu" 分支
 
       - name: Configure Git
         run: |
@@ -22,11 +24,16 @@ jobs:
         id: date
         run: echo "date=$(date '+%Y年%m月%d日')" >> $GITHUB_ENV
 
-      - name: Create New Branch
+      - name: Update README.md
         run: |
-          BRANCH_NAME="auto-md-$(date '+%Y%m%d')"
-          git checkout -b $BRANCH_NAME
-          echo "今天是${{ env.date }}，缪哥又没学 git" > 缪哥学习记录.md
-          git add 缪哥学习记录.md
-          git commit -m "自动生成: ${{ env.date }}"
-          git push origin $BRANCH_NAME
+          echo "## $(date '+%Y-%m-%d')" >> README.md
+          echo "- 缪哥又没学 git" >> README.md
+          echo "" >> README.md
+
+      - name: Commit and Push Changes
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          git add README.md
+          git commit -m "更新 README: ${{ env.date }}" || echo "No changes to commit"
+          git push origin mogu
