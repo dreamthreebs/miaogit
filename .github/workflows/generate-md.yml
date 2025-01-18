@@ -1,0 +1,32 @@
+name: Generate Markdown and Create Branch
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # 每天 UTC 0:00（北京时间 8:00）运行
+  workflow_dispatch:  # 允许手动触发
+
+jobs:
+  generate-md:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Configure Git
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Get Current Date
+        id: date
+        run: echo "date=$(date '+%Y年%m月%d日')" >> $GITHUB_ENV
+
+      - name: Create New Branch
+        run: |
+          BRANCH_NAME="auto-md-$(date '+%Y%m%d')"
+          git checkout -b $BRANCH_NAME
+          echo "今天是${{ env.date }}，缪哥又没学 git" > 缪哥学习记录.md
+          git add 缪哥学习记录.md
+          git commit -m "自动生成: ${{ env.date }}"
+          git push origin $BRANCH_NAME
