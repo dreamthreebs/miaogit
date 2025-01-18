@@ -13,7 +13,18 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
         with:
-          ref: mogu  # 确保操作的是 "mogu" 分支
+          fetch-depth: 0  # 拉取所有分支信息
+
+      - name: Ensure mogu branch exists
+        run: |
+          if git ls-remote --heads origin mogu | grep mogu; then
+            echo "mogu 分支已存在，切换到 mogu"
+            git checkout mogu
+          else
+            echo "mogu 分支不存在，创建并推送"
+            git checkout -b mogu
+            git push origin mogu
+          fi
 
       - name: Configure Git
         run: |
