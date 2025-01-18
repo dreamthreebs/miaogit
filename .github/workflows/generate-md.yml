@@ -33,18 +33,32 @@ jobs:
 
       - name: Get Current Date
         id: date
-        run: echo "date=$(date '+%Y年%m月%d日')" >> $GITHUB_ENV
+        run: echo "TODAY=$(date '+%Y-%m-%d')" >> $GITHUB_ENV
+
+      - name: Check if today's log exists
+        id: check_log
+        run: |
+          if grep -q "## $TODAY" README.md; then
+            echo "今天的记录已存在，跳过更新"
+            echo "SKIP_UPDATE=true" >> $GITHUB_ENV
+          else
+            echo "今天的记录不存在，继续更新"
+            echo "SKIP_UPDATE=false" >> $GITHUB_ENV
+          fi
 
       - name: Update README.md
+        if: env.SKIP_UPDATE == 'false'
         run: |
-          echo "## $(date '+%Y-%m-%d')" >> README.md
+          echo "## $TODAY" >> README.md
           echo "- 缪哥又没学 git" >> README.md
           echo "" >> README.md
 
       - name: Commit and Push Changes
+        if: env.SKIP_UPDATE == 'false'
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           git add README.md
-          git commit -m "更新 README: ${{ env.date }}" || echo "No changes to commit"
+          git commit -m "更新 README: $TODAY" || echo "No changes to commit"
           git push origin mogu
+
